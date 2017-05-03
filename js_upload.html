@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script type="application/javascript">
+        var projectId = 1111;
+        var apiKey = "Your API 2.0 Key";
+        var apiURI = "https://sdn.3qsdn.com/api/v2/projects/" + projectId + "/files";
+        var xhr = null;
+        var uploadLocation = null;
+        var uploadCanceled = false;
+
+        function startUpload(chunked) {
+            uploadCanceled = false;
+            var file = document.getElementById("file").files[0];
+            if (!file) return alert("Couldn't get the file from the input.");
+
+            // POST a HTTP request to api and get the upload location
+            var postData = {
+                FileName: file.name,
+                FileFormat: file.name.substr(file.name.lastIndexOf('.') + 1)
+            };
+
+            xhr = new XMLHttpRequest();
+            xhr.onload = function (e) {
+                // the upload location is returned in the Location header
+                if (this.status === 201) {
+                    uploadLocation = this.getResponseHeader("Location");
+                    if (uploadLocation !== null) {
+                        // start upload
+                        if(chunked) {
+                            uploadFileInChunks(uploadLocation, file);
+                        } else {
+                            uploadAsWholeFile(uploadLocation, file);
+                        }
+                    }
+                }
+            };
+
+            xhr.open("POST", apiURI, true);
+            xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+            xhr.setRequestHeader('X-AUTH-APIKEY', apiKey);
+            xhr.send(JSON.stringify(postData));
+
+        }
+
+        function uploadAsWholeFile(uri, file) {
+            uploadCanceled = false;
+            xhr = new XMLHttpRequest();
+
+            // upload progress
+            xhr.upload.onprogress = function (e) {
+                var progress = Math.ceil((e.loaded * 100) / e.total);
+                document.getElementById("status").innerHTML = progress + "% uploaded";
+            };
+
+            // put content in body
+            xhr.open("PUT", uri);
+            xhr.send(file);
+        }
+
+        function uploadFileInChunks(uri, file) {
+            uploadCanceled = false;
+            // upload first chunk
+            uploadNextChunk(uri, file, 0);
+        }
+
+        function uploadNextChunk(uri, file, uploadedBytes) {
+            var maxChunkSize = 5 * 1024 * 1024; // 5 MiB
+            var remainingSize = file.size - uploadedBytes;
+            var currentChunkSize = (maxChunkSize < remainingSize) ? maxChunkSize : remainingSize;
+
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("PUT", uri, true);
+                xhr.onreadystatechange = function () {
+                    if (this.readyState !== 4) return;
+
+                    uploadedBytes += currentChunkSize;
+
+                    // print statistics
+                    var progress = Math.ceil((uploadedBytes * 100) / file.size);
+                    document.getElementById("status").innerHTML = progress + "% uploaded";
+
+                    // last chunk or upload canceled: return
+                    if (uploadedBytes === file.size || uploadCanceled) {
+                        return;
+                    }
+
+                    uploadNextChunk(uri, file, uploadedBytes);
+                };
+                // Content-Range Header
+                var currentRangeEnd = uploadedBytes + currentChunkSize - 1;
+                var currentRange = uploadedBytes + '-' + currentRangeEnd;
+                xhr.setRequestHeader('Content-Range', 'bytes ' + currentRange + '/' + file.size);
+                // send content
+                xhr.send(e.target.result);
+            };
+            // read chunk from file
+            reader.readAsArrayBuffer(file.slice(uploadedBytes, uploadedBytes + currentChunkSize));
+        }
+
+        function resumeUpload() {
+            uploadCanceled = false;
+            var file = document.getElementById("file").files[0];
+            if (!file) return alert("Couldn't get the file from the input.");
+
+            xhr = new XMLHttpRequest();
+            xhr.onload = function (e) {
+                // if 308, get Range Header and resume upload
+                if (this.status === 308) {
+                    var rangeHeader = this.getResponseHeader("Range");
+                    var uploadedBytes = parseInt(rangeHeader.substr(rangeHeader.lastIndexOf("-") + 1));
+                    uploadNextChunk(uploadLocation, file, uploadedBytes + 1);
+                }
+            };
+
+            // PUT with "Content-Range: bytes */filesize" return a 308 response with last Range Header
+            xhr.open("PUT", uploadLocation, true);
+            xhr.setRequestHeader('Content-Range', 'bytes */' + file.size);
+            xhr.send();
+        }
+
+        function cancelUpload() {
+            uploadCanceled = true;
+        }
+    </script>
+</head>
+<body>
+
+    <h2>3Q SDN File Upload</h2>
+    <div>Pick a file to start the upload!</div>
+    <input type="file" id="file">
+
+    <h2>Upload as whole file</h2>
+    <input type="button" value="Start" onclick="startUpload(0)">
+
+    <h2>Upload file in chunks</h2>
+    <input type="button" value="Start" onclick="startUpload(1)">
+    <input type="button" value="Cancel" onclick="cancelUpload()">
+    <input type="button" value="Resume" onclick="resumeUpload()">
+
+    <h2>Status</h2>
+    <div id="status"></div>
+
+</body>
+</html>

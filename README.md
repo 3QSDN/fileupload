@@ -8,7 +8,7 @@ The Fileupload works in 2 Steps:
     
     with the Header `X-AUTH-APIKEY` for authentication and in the body `FileName` and `FileFormat` in JSON
 
-2. Extract the upload location URI form the created File Entity from the `Location` Header of the `201` response
+2. Extract the Upload Location URI form the created File Entity from the `Location` Header of the `201` response
 
 3. PUT the File Content to that location in a whole file or in chunks. Chunked uploads are resumable.
 

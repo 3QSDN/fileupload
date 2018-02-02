@@ -34,5 +34,5 @@ Set projectId and apiKey to your values and enjoy!
 
 Set upload Location, mime-type and source file
 
-./chunked-file-upload.sh "https://global-file-upload.3qsdn.com/api/{key}" "video/mp4" /source_folder/source.mp4
+./chunked-file-upload.sh "`{ExtractedUploadLocation}`" "`{mimetype}`" `{source}`
 

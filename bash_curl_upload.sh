@@ -11,7 +11,7 @@ ProjectId="$2"
 ContentType="$3"
 UploadFile="$4"
 FileSize=$(stat -c "%s" "$UploadFile")
-POSTURI="https://sdn-staging02.3qsdn.com/api/v2/projects/$ProjectId/files"
+POSTURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
 
 function uploadNextChunk {
     [ $# -lt 5 ] && { echo 'Error uploadNextChunk(): not enough arguments'; exit 1; }

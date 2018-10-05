@@ -1,15 +1,17 @@
 #!/bin/bash
 
 # usage
-# ./upload.sh "https://global-file-upload.3qsdn.com/api/{key}" "video/mp4" /source_folder/source.mp4
+# ./bash_curl_upload.sh {Your-API-KEY} {ProjectId} mp4 videofile.mp4
 
-# set -x
-[ $# -lt 3 ] && { echo 'Error: not enough arguments'; exit 1; }
+set -x
+[ $# -lt 4 ] && { echo 'Error: not enough arguments'; exit 1; }
 
-URI="$1"
-ContentType="$2"
-UploadFile="$3"
+APIKEY="$1"
+ProjectId="$2"
+ContentType="$3"
+UploadFile="$4"
 FileSize=$(stat -c "%s" "$UploadFile")
+POSTURI="https://sdn-staging02.3qsdn.com/api/v2/projects/$ProjectId/files"
 
 function uploadNextChunk {
     [ $# -lt 5 ] && { echo 'Error uploadNextChunk(): not enough arguments'; exit 1; }
@@ -46,7 +48,7 @@ function uploadNextChunk {
             --data-binary "@-" \
             "$URI" \
             < <(dd if=$UploadFile skip=$UploadedBytes count=$CurrentChunkSize iflag=skip_bytes,count_bytes 2>/dev/null) \
-            1>> "$UploadFile.upload.log" 2>&1;
+            1>> upload.log 2>&1;
 
         returnCode=$?
         if [ $retryCount -gt 5 ]; then
@@ -65,9 +67,21 @@ function uploadNextChunk {
         return 0;
     fi
 
-    # upload nect chunk
+    # upload next chunk
     uploadNextChunk $URI $ContentType $UploadFile $FileSize $UploadedBytes
 }
 
+# get upload location from api
+curlResponse=$(curl -is -X POST \
+    -H "X-AUTH-APIKEY:$APIKEY" \
+    -H "Accept: application/json" \
+    -H "Content-Type:application/json" \
+    --data "{\"FileName\":\"$UploadFile\",\"FileFormat\":\"$ContentType\"}" \
+    "$POSTURI" 2>/dev/null)
+
+# parse curlResponse for Location Header
+UPLOADURI=$(echo "$curlResponse" | grep "Location: " | cut -d ' ' -f2 | tr -d '\n\r\t')
+echo "Upload file to $UPLOADURI"
+
 # upload first chunk
-uploadNextChunk $URI $ContentType $UploadFile $FileSize 0
+uploadNextChunk "$UPLOADURI" $ContentType $UploadFile $FileSize 0

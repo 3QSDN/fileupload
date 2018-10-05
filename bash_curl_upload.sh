@@ -3,7 +3,7 @@
 # usage
 # ./bash_curl_upload.sh {Your-API-KEY} {ProjectId} mp4 videofile.mp4
 
-set -x
+#set -x
 [ $# -lt 4 ] && { echo 'Error: not enough arguments'; exit 1; }
 
 APIKEY="$1"

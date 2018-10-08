@@ -2,8 +2,12 @@
 
 # usage
 # ./bash_curl_upload.sh {Your-API-KEY} {ProjectId} mp4 videofile.mp4
+#
+# if you want to replace the source video of a file add the FileId
+# ./bash_curl_upload.sh {Your-API-KEY} {ProjectId} mp4 videofile.mp4 {FileId}
 
-#set -x
+
+# set -x
 [ $# -lt 4 ] && { echo 'Error: not enough arguments'; exit 1; }
 
 APIKEY="$1"
@@ -11,7 +15,15 @@ ProjectId="$2"
 ContentType="$3"
 UploadFile="$4"
 FileSize=$(stat -c "%s" "$UploadFile")
-POSTURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
+HTTPMethode="POST"
+APIURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
+
+if [ $# -eq 5 ]; then
+    # if FileID given, add it to APIURI + replace
+    APIURI="$APIURI/$5/replace"
+    # if replace http methode must be PUT
+    HTTPMethode="PUT"
+fi
 
 function uploadNextChunk {
     [ $# -lt 5 ] && { echo 'Error uploadNextChunk(): not enough arguments'; exit 1; }
@@ -40,7 +52,7 @@ function uploadNextChunk {
     retryCount=0
     returnCode=127
     while [ $returnCode -gt 0 ]; do
-        curl -f -X PUT \
+        curl -f -vvv -X PUT \
             -H "Accept: application/json" \
             -H "Content-type: $ContentType" \
             -H "Transfer-Encoding: chunked" \
@@ -72,12 +84,12 @@ function uploadNextChunk {
 }
 
 # get upload location from api
-curlResponse=$(curl -is -X POST \
+curlResponse=$(curl -isv -X "$HTTPMethode" \
     -H "X-AUTH-APIKEY:$APIKEY" \
     -H "Accept: application/json" \
     -H "Content-Type:application/json" \
     --data "{\"FileName\":\"$UploadFile\",\"FileFormat\":\"$ContentType\"}" \
-    "$POSTURI" 2>/dev/null)
+    "$APIURI" 2>/dev/null)
 
 # parse curlResponse for Location Header
 UPLOADURI=$(echo "$curlResponse" | grep "Location: " | cut -d ' ' -f2 | tr -d '\n\r\t')

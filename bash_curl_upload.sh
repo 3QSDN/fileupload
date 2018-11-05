@@ -92,7 +92,7 @@ curlResponse=$(curl -isv -X "$HTTPMethode" \
     "$APIURI" 2>/dev/null)
 
 # parse curlResponse for Location Header
-UPLOADURI=$(echo "$curlResponse" | grep "Location: " | cut -d ' ' -f2 | tr -d '\n\r\t')
+UPLOADURI=$(echo "$curlResponse" | grep "[Ll]ocation: " | cut -d ' ' -f2 | tr -d '\n\r\t')
 echo "Upload file to $UPLOADURI"
 
 # upload first chunk

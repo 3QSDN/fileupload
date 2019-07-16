@@ -54,6 +54,14 @@
                 document.getElementById("status").innerHTML = progress + "% uploaded";
             };
 
+            // upload finished, get FileId from response
+            xhr.onload = function (e) {
+                if (this.status === 201) {
+                    var response = JSON.parse(this.response);
+                    document.getElementById("status").innerHTML = "Upload finished, FileId: " + response.FileId;
+                }
+            };
+
             // put content in body
             xhr.open("PUT", uri);
             xhr.send(file);
@@ -83,9 +91,17 @@
                     var progress = Math.ceil((uploadedBytes * 100) / file.size);
                     document.getElementById("status").innerHTML = progress + "% uploaded";
 
-                    // last chunk or upload canceled: return
-                    if (uploadedBytes === file.size || uploadCanceled) {
+                    // upload canceled: return
+                    if (uploadCanceled) {
                         return;
+                    }
+
+                    // last chunk, get FileId and return it
+                    if (uploadedBytes === file.size) {
+                        var response = JSON.parse(this.response);
+                        document.getElementById("status").innerHTML = "Upload finished, FileId: " + response.FileId;
+
+                        return response.FileId;
                     }
 
                     uploadNextChunk(uri, file, uploadedBytes);

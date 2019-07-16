@@ -13,6 +13,8 @@ The Fileupload works in 2 Steps:
 
 3. PUT the File Content to that location in a whole file or in chunks. Chunked uploads are resumable.
 
+4. When the upload is finished the FileId will be returned as JSON in a 201 response.
+
 See the example `js_upload.html` for more details.
 
 ##### js_upload.html
@@ -29,6 +31,8 @@ Set projectId and apiKey to your values and enjoy!
 2. Extract the Upload Location URI form the `Location` Header of the `201` response
 
 3. PUT the File Content to that location.
+
+4. When the upload is finished the FileId will be returned as JSON in a 201 response.
 
 See the example `bash_curl_upload.sh` for more details.
 

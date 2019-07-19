@@ -16,7 +16,7 @@ ContentType="$3"
 UploadFile="$4"
 FileSize=$(stat -c "%s" "$UploadFile")
 HTTPMethode="POST"
-APIURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
+APIURI="https://sdn-dev.3qsdn.com/api/v2/projects/$ProjectId/files"
 
 if [ $# -eq 5 ]; then
     # if FileID given, add it to APIURI + replace
@@ -52,7 +52,7 @@ function uploadNextChunk {
     retryCount=0
     returnCode=127
     while [ $returnCode -gt 0 ]; do
-        curl -f -vvv -X PUT \
+        curlResponse=$(curl -f -s -X PUT \
             -H "Accept: application/json" \
             -H "Content-type: $ContentType" \
             -H "Transfer-Encoding: chunked" \
@@ -60,7 +60,7 @@ function uploadNextChunk {
             --data-binary "@-" \
             "$URI" \
             < <(dd if=$UploadFile skip=$UploadedBytes count=$CurrentChunkSize iflag=skip_bytes,count_bytes 2>/dev/null) \
-            1>> upload.log 2>&1;
+            2>/dev/null)
 
         returnCode=$?
         if [ $retryCount -gt 5 ]; then
@@ -76,6 +76,8 @@ function uploadNextChunk {
     # check if upload completed
     UploadedBytes=`expr $UploadedBytes + $CurrentChunkSize`
     if [ $UploadedBytes -eq $FileSize ]; then
+        echo -n "FileId of new File is "
+        echo "$curlResponse" | cut -d ':' -f2 | tr -d '"}'
         return 0;
     fi
 

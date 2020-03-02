@@ -16,7 +16,7 @@ ContentType="$3"
 UploadFile="$4"
 FileSize=$(stat -c "%s" "$UploadFile")
 HTTPMethode="POST"
-APIURI="https://sdn-dev.3qsdn.com/api/v2/projects/$ProjectId/files"
+APIURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
 
 if [ $# -eq 5 ]; then
     # if FileID given, add it to APIURI + replace

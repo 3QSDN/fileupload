@@ -3,9 +3,7 @@
 <head>
     <meta charset="utf-8">
     <script type="application/javascript">
-        var projectId = 1111;
-        var apiKey = "Your API 2.0 Key";
-        var apiURI = "https://sdn.3qsdn.com/api/v2/projects/" + projectId + "/files";
+        var getUploadLocationURI = "server.php";
         var xhr = null;
         var uploadLocation = null;
         var uploadCanceled = false;
@@ -23,9 +21,9 @@
 
             xhr = new XMLHttpRequest();
             xhr.onload = function (e) {
-                // the upload location is returned in the Location header
-                if (this.status === 201) {
-                    uploadLocation = this.getResponseHeader("Location");
+                // the upload location is returned from the server component
+                if (this.status === 200) {
+                    uploadLocation = this.responseText;
                     if (uploadLocation !== null) {
                         // start upload
                         if(chunked) {
@@ -37,11 +35,9 @@
                 }
             };
 
-            xhr.open("POST", apiURI, true);
+            xhr.open("POST", getUploadLocationURI, true);
             xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
-            xhr.setRequestHeader('X-AUTH-APIKEY', apiKey);
             xhr.send(JSON.stringify(postData));
-
         }
 
         function uploadAsWholeFile(uri, file) {

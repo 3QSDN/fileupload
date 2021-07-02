@@ -2,7 +2,7 @@
 
 $ProjectId = YourProjectID;
 $APIKey = "Your API Key";
-$APIURI = "https://sdn-dev.3qsdn.com/api/v2/projects/{$ProjectId}/files";
+$APIURI = "https://sdn.3qsdn.com/api/v2/projects/{$ProjectId}/files";
 $Location = "";
 
 $ch = curl_init($APIURI);

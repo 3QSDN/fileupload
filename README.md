@@ -1,24 +1,24 @@
 # 3Q SDN Fileupload Examples
 
 ## Upload via JavaScript
-The Fileupload works in 2 Steps:
+The Fileupload works in 2 Steps with a Server component to hide SDN API Key for clients:
 
-1. Get Upload Location from the API
+1. Get Upload Location from the server.php (on your server)
     
-    `POST https://sdn.3qsdn.com/api/v2/projects/[Project_Id]/files`
+    server.php call `POST https://sdn.3qsdn.com/api/v2/projects/[Project_Id]/files`
     
-    with the Header `X-AUTH-APIKEY` for authentication and in the body `FileName` and `FileFormat` in JSON
+    with the Header `X-AUTH-APIKEY` for authentication and in the body `FileName` and `FileFormat` in JSON received from JS
 
-2. Extract the Upload Location URI form the `Location` Header of the `201` response
+2. server.php extract the Upload Location URI form the `Location` Header of the `201` response and return it to JS
 
-3. PUT the File Content to that location in a whole file or in chunks. Chunked uploads are resumable.
+3. JS PUT the File Content to that location in a whole file or in chunks. Chunked uploads are resumable.
 
 4. When the upload is finished the FileId will be returned as JSON in a 201 response.
 
-See the example `js_upload.html` for more details.
+See the example `js/js_upload.html` and `js/server.php` for more details.
 
-##### js_upload.html
-Set projectId and apiKey to your values and enjoy!
+##### server.php
+Set ProjectId and APIKey to your values and enjoy!
 
 ## Upload via CURL
 
@@ -34,7 +34,7 @@ Set projectId and apiKey to your values and enjoy!
 
 4. When the upload is finished the FileId will be returned as JSON in a 201 response.
 
-See the example `bash_curl_upload.sh` for more details.
+See the example `curl/bash_curl_upload.sh` for more details.
 
 ##### bash_curl_upload.sh
 

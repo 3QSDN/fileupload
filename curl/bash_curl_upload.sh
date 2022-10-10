@@ -14,7 +14,7 @@ APIKEY="$1"
 ProjectId="$2"
 ContentType="$3"
 UploadFile="$4"
-FileSize=$(stat -c "%s" "$UploadFile")
+FileSize=$(stat -f "%z" "$UploadFile")
 HTTPMethode="POST"
 APIURI="https://sdn.3qsdn.com/api/v2/projects/$ProjectId/files"
 
@@ -26,7 +26,7 @@ if [ $# -eq 5 ]; then
 fi
 
 function uploadNextChunk {
-    [ $# -lt 5 ] && { echo 'Error uploadNextChunk(): not enough arguments'; exit 1; }
+    [ $# -lt 5 ] && { echo "Error uploadNextChunk(): not enough arguments"; exit 1; }
 
     # function parameters
     URI="$1"
@@ -77,7 +77,7 @@ function uploadNextChunk {
     UploadedBytes=`expr $UploadedBytes + $CurrentChunkSize`
     if [ $UploadedBytes -eq $FileSize ]; then
         echo -n "FileId of new File is "
-        echo "$curlResponse" | cut -d ':' -f2 | tr -d '"}'
+        echo "$curlResponse" | cut -d ',' -f1 | cut -d ':' -f2 | tr -d '"}'
         return 0;
     fi
 
